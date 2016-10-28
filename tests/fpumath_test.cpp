@@ -73,4 +73,20 @@ TEST(Quaternion)
 
 	bx::quatToEuler(euler, quat);
 	CHECK(bx::fequal(euler[2], az, 0.001f) );
+
+	float quatM[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	for (int i = 0; i < 4; ++i) {
+		memset(quat, 0, sizeof(quat));
+		quat[i] = 1.0f;
+		
+		bx::mtxQuat(mtxQ, quat);
+		bx::quatMtx(quatM, mtxQ);
+		CHECK(bx::fequal(quat, quatM, 4, 0.001f));
+	}
+
+	bx::quatIdentity(quat);
+	bx::quatRotateX(quat, ax);
+	bx::mtxQuat(mtxQ, quat);
+	bx::quatMtx(quatM, mtxQ);
+	CHECK(bx::fequal(quat, quatM, 4, 0.001f));
 }

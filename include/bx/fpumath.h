@@ -526,6 +526,46 @@ namespace bx
 		_result[3] = cz;
 	}
 
+	// Adapted from Ogre3D
+	// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
+    // article "Quaternion Calculus and Fast Animation".
+	inline void quatMtx(float* __restrict _result, const float* __restrict _m)
+	{
+		float fTrace = _m[0] + _m[5] + _m[10];
+        float fRoot;
+
+        if (fTrace > 0.0)
+        {
+            // |w| > 1/2, may as well choose w > 1/2
+            fRoot = sqrtf(fTrace + 1.0f);  // 2w
+            _result[3] = 0.5f * fRoot;
+            fRoot = 0.5f / fRoot;  // 1/(4w)
+            _result[0] = (_m[9] - _m[6]) * fRoot;
+            _result[1] = (_m[2] - _m[8]) * fRoot;
+			_result[2] = (_m[4] - _m[1]) * fRoot;
+        }
+        else
+        {
+            // |w| <= 1/2
+            static size_t s_iNext[3] = { 1, 2, 0 };
+            size_t i = 0;
+            if (_m[5] > _m[0])
+                i = 1;
+            if (_m[10] > _m[4 * i + i])
+                i = 2;
+            size_t j = s_iNext[i];
+            size_t k = s_iNext[j];
+
+            fRoot = sqrtf(_m[4 * i + i] - _m[4 * j + j]- _m[4 * k + k] + 1.0f);
+            float* apkQuat[3] = { &_result[0], &_result[1], &_result[2] };
+            *apkQuat[i] = 0.5f * fRoot;
+            fRoot = 0.5f / fRoot;
+            _result[3] = (_m[4 * k + j] - _m[4 * j + k])*fRoot;
+            *apkQuat[j] = (_m[4 * j + i] + _m[4 * i + j])*fRoot;
+            *apkQuat[k] = (_m[4 * k + i] + _m[4 * i + k])*fRoot;
+        }
+	}
+
 	inline void vec3MulQuat(float* __restrict _result, const float* __restrict _vec, const float* __restrict _quat)
 	{
 		float tmp0[4];
